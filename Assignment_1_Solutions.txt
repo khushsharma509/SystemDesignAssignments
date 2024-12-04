@@ -1,0 +1,167 @@
+
+-- Problem 1
+-- a. Create the Books table
+CREATE TABLE Books (
+    BookID INT PRIMARY KEY,
+    Title VARCHAR(100),
+    Author VARCHAR(50),
+    PublishedYear INT
+);
+
+-- b. Add a new column ISBN
+ALTER TABLE Books ADD ISBN VARCHAR(13);
+
+-- c. Delete the PublishedYear column
+ALTER TABLE Books DROP COLUMN PublishedYear;
+
+-- Problem 2
+-- a. Retrieve names of students older than 15
+SELECT Name FROM Students WHERE Age > 15;
+
+-- b. Insert a new record
+INSERT INTO Students (StudentID, Name, Age, Grade) VALUES (104, 'Tom Brown', 15, 'C');
+
+-- c. Update Jane Doe's grade to A+
+UPDATE Students SET Grade = 'A+' WHERE Name = 'Jane Doe';
+
+-- d. Delete records of students with grade C
+DELETE FROM Students WHERE Grade = 'C';
+
+-- Problem 3
+-- a. Grant SELECT and INSERT privileges to User2
+GRANT SELECT, INSERT ON Books TO User2;
+
+-- b. Revoke INSERT privilege from User2
+REVOKE INSERT ON Books FROM User2;
+
+-- Problem 4
+-- a. Start the transaction
+START TRANSACTION;
+
+-- b. Insert new order
+INSERT INTO Orders (OrderID, ProductID, Quantity) VALUES (201, 105, 2);
+
+-- c. Deduct quantity from Inventory
+UPDATE Inventory SET Quantity = Quantity - 2 WHERE ProductID = 105;
+
+-- d. Rollback if error occurs, else commit
+ROLLBACK; -- If error
+COMMIT; -- If success
+
+-- Problem 5
+-- Create Customers table
+CREATE TABLE Customers (
+    CustomerID INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Email VARCHAR(50),
+    Phone VARCHAR(15)
+);
+
+-- Insert a customer record
+INSERT INTO Customers (CustomerID, Name, Email, Phone) VALUES (201, 'Emily Clark', 'emily@example.com', '1234567890');
+
+-- Grant SELECT privilege to AdminUser
+GRANT SELECT ON Customers TO AdminUser;
+
+-- Rollback the last inserted record
+ROLLBACK;
+
+-- Problem 6
+-- Easy: Create Employees table
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Department VARCHAR(30),
+    Salary INT
+);
+
+-- b. Rename Department to Dept
+ALTER TABLE Employees RENAME COLUMN Department TO Dept;
+
+-- Medium: Add JoiningDate column
+ALTER TABLE Employees ADD JoiningDate DATE DEFAULT '2024-01-01';
+
+-- d. Drop Salary column
+ALTER TABLE Employees DROP COLUMN Salary;
+
+-- Hard: Create Departments table and add foreign key
+CREATE TABLE Departments (
+    DeptID INT PRIMARY KEY,
+    DeptName VARCHAR(30) UNIQUE
+);
+ALTER TABLE Employees ADD DeptID INT;
+ALTER TABLE Employees ADD FOREIGN KEY (DeptID) REFERENCES Departments(DeptID);
+
+-- Problem 7
+-- Easy: Insert a record into Employees
+INSERT INTO Employees (EmployeeID, Name, Dept, Salary) VALUES (1, 'Alice', 'HR', 50000);
+
+-- b. Retrieve all employees in HR
+SELECT * FROM Employees WHERE Dept = 'HR';
+
+-- Medium: Update Salary for IT department
+UPDATE Employees SET Salary = Salary * 1.10 WHERE Dept = 'IT';
+
+-- d. Delete employees with Salary less than 40000
+DELETE FROM Employees WHERE Salary < 40000;
+
+-- Hard: Merge statement
+MERGE INTO Employees AS E
+USING (SELECT 1 AS EmployeeID, 'Alice' AS Name, 'HR' AS Dept, 55000 AS Salary) AS NewData
+ON E.EmployeeID = NewData.EmployeeID
+WHEN MATCHED THEN UPDATE SET Salary = NewData.Salary
+WHEN NOT MATCHED THEN INSERT (EmployeeID, Name, Dept, Salary) VALUES (NewData.EmployeeID, NewData.Name, NewData.Dept, NewData.Salary);
+
+-- Problem 8
+-- Easy: Grant privileges to HRManager
+GRANT SELECT, UPDATE ON Employees TO HRManager;
+
+-- b. Revoke UPDATE privilege
+REVOKE UPDATE ON Employees FROM HRManager;
+
+-- Medium: Create DataViewer role
+CREATE ROLE DataViewer;
+GRANT SELECT ON ALL TABLES TO DataViewer;
+
+-- d. Grant DataViewer role to Viewer1
+GRANT DataViewer TO Viewer1;
+
+-- Hard: Revoke all privileges from InternUser
+REVOKE ALL PRIVILEGES FROM InternUser;
+
+-- Problem 9
+-- Easy: Start transaction to insert record in Departments
+START TRANSACTION;
+INSERT INTO Departments (DeptID, DeptName) VALUES (1, 'Finance');
+COMMIT;
+
+-- Medium: Start transaction with rollback on error
+START TRANSACTION;
+INSERT INTO Departments (DeptID, DeptName) VALUES (2, 'IT');
+ROLLBACK; -- If error
+COMMIT; -- If success
+
+-- Hard: Savepoint in transaction
+START TRANSACTION;
+SAVEPOINT InsertSave;
+INSERT INTO Employees (EmployeeID, Name, Dept) VALUES (2, 'Bob', 'Finance');
+ROLLBACK TO InsertSave; -- If error
+COMMIT; -- If success
+
+-- Problem 10
+-- Medium: Create Projects table
+CREATE TABLE Projects (
+    ProjectID INT PRIMARY KEY,
+    ProjectName VARCHAR(50),
+    EmployeeID INT,
+    FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID)
+);
+
+-- b. Insert a project record
+INSERT INTO Projects (ProjectID, ProjectName, EmployeeID) VALUES (101, 'Website Upgrade', 1);
+
+-- Hard: Transaction for inserting a project
+START TRANSACTION;
+INSERT INTO Projects (ProjectID, ProjectName, EmployeeID) VALUES (102, 'Mobile App Development', 2);
+ROLLBACK; -- If EmployeeID doesn't exist
+COMMIT;
